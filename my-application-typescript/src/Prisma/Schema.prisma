@@ -57,11 +57,13 @@ model MedicalRecord {
 	AccessRequests AccessRequest[] @relation("ACCESS_REQUEST_DOCTOR") // danh sách bác sĩ đang yêu cầu truy cập
 
 	typeMR TypeMR  // Loại điều trị 
-	inpatient Inpatient? @relation("INPATIENT_MR") // điều trị nội trú
-	outpatient Outpatient? @relation("OUTPATIENT_MR") // điều trị ngoại trú
+	// inpatient Inpatient? @relation("INPATIENT_MR") // điều trị nội trú
+	// outpatient Outpatient? @relation("OUTPATIENT_MR") // điều trị ngoại trú
+	specialty String? // khoa điều trị
+	bed String?  // giường bệnh
 	comeTime DateTime @default(now()) // thời gian vào viện 
-	leaveTime DateTime // thời gian xuất viện
-	ReExaminationTime DateTime  // thời gian tái khám
+	leaveTime DateTime? // thời gian xuất viện
+	ReExaminationTime DateTime?  // thời gian tái khám
 
 	personalMH String //	personal medical history: Tiền sử bệnh bản thân
 	familyMH String  //  family medical history: Tiền sử bệnh gia đình
@@ -82,36 +84,36 @@ model MedicalRecord {
 	diagnosis String // chuẩn đoán bệnh
 	prognosis String // tiên lượng
 	directionTreatment String  // hướng điều trị
+	treatments Treatment[] @relation("TREATMENT_MR")
 }
 
-model Inpatient {
-	medicalRecord MedicalRecord @relation("INPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
-	MRId String @id  
-	specialty String // khoa điều trị
-	bed String  // giường bệnh
-	treatments Treatment[] @relation("TREATMENT_INPATIENT") // danh sách các điều trị
-} 
+// model Inpatient {
+// 	medicalRecord MedicalRecord @relation("INPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
+// 	MRId String @id  
+// 	treatments Treatment[] @relation("TREATMENT_INPATIENT") // danh sách các điều trị
+// } 
 
-model Outpatient {
-	medicalRecord MedicalRecord @relation("OUTPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
-	MRId String @id  
-	medicine Medicine[] @relation("OUTPATIENT_MEDICINE") // danh sách thuốc
-}
+// model Outpatient {
+// 	medicalRecord MedicalRecord @relation("OUTPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
+// 	MRId String @id  
+// 	medicine Medicine[] @relation("OUTPATIENT_MEDICINE") // danh sách thuốc
+// }
 
 model Treatment {
 	treatmentId String @id @default(uuid()) // id điều trị
 	diseaseProgression String  // diễn biến bệnh
 	treatmentTime DateTime @default(now()) // thời gian điều trị
 	medicine Medicine[] @relation("TREATMENT_MEDICINE") // danh sachs thuốc
-	inpatient Inpatient @relation("TREATMENT_INPATIENT", fields: [MRId], references: [MRId]) // nội trú
+	// inpatient Inpatient @relation("TREATMENT_INPATIENT", fields: [MRId], references: [MRId]) // nội trú
+	medicalRecord MedicalRecord @relation("TREATMENT_MR", fields: [MRId], references: [MRId]) // bệnh án
 	MRId String 
 }
 
 model Medicine {
-	treatment Treatment? @relation("TREATMENT_MEDICINE", fields: [treatmentId], references: [treatmentId]) // thuộc về danh sách điều trị nội trú
+	treatment Treatment @relation("TREATMENT_MEDICINE", fields: [treatmentId], references: [treatmentId]) // thuộc về danh sách điều trị nội trú
 	treatmentId String
-	outpatient Outpatient? @relation("OUTPATIENT_MEDICINE", fields: [MRId], references: [MRId]) // thuộc về ngoại trú
-	MRId String 
+	// outpatient Outpatient? @relation("OUTPATIENT_MEDICINE", fields: [MRId], references: [MRId]) // thuộc về ngoại trú
+	// MRId String? 
 	medicineId String @id @default(uuid()) // id thuốc
 	medicineName String // tên thuốc
 	drugDosage String // liều dùng

@@ -1,28 +1,26 @@
 import express, { Router, Express, Request, Response } from "express";
-import { createAdmin, createDoctor, createPatient } from "../Controller/adminController";
-import { changePassword, getDoctorList, getPatientList, login } from "../Controller/userController";
-import { updatePatientInfo } from "../Controller/patientController";
-import { updateDoctorInfo } from "../Controller/doctorController";
+import { userController } from "../Controller/userController";
+import { medicalRecordController } from "../Controller/medicalRecordController";
 const router: Router = express.Router();
 
 const initAPIRoute = (app: Express) => {
 
-    // router.post('/createPatient', createPatient );
-    // router.post('createAdmin', createAdmin);
-    // router.get('/getPatientByID', getPatientByID);
-    // router.get('/login',autheticationUser);
-    router.post('/Admin/createAdmin', createAdmin);
-    router.post('/changePassword', changePassword);
-    router.post('/login', login);
-    router.post('/Admin/createPatient', createPatient);
-    router.post('/Admin/createDoctor', createDoctor); 
-    router.get('/getPatientList/:page', getPatientList);
-    router.get('/getDoctorList/:page', getDoctorList);
+    router.post('/Admin/createAdmin', userController.createAdmin);
+    router.post('/changePassword', userController.changePassword);
+    router.post('/login', userController.login);
+    router.post('/Admin/createPatient', userController.createPatient);
+    router.post('/Admin/createDoctor', userController.createDoctor); 
+    router.get('/getPatientList/:page', userController.getPatientList);
+    router.get('/getDoctorList/:page', userController.getDoctorList);
+    router.get('/getPatientById', userController.getPatientById);
+    router.get('/getDoctorById', userController.getDoctorById);
+    router.put('/Patient/updatePatientInfo', userController.updatePatientInfo);
 
-    router.put('/Patient/updatePatientInfo', updatePatientInfo);
+    router.put('/Doctor/updateDoctorInfo', userController.updateDoctorInfo);
+    router.post('/Doctor/createMRInpatient', medicalRecordController.createMRInpatient )
+    router.get('/Doctor/findMRByDoctorId', medicalRecordController.findMRByDoctorId)
 
-    router.put('/Doctor/updateDoctorInfo', updateDoctorInfo);
-    return app.use('/api/v1/', router);
+    return app.use('/api/v1/',router);
 }
 
 export default initAPIRoute;

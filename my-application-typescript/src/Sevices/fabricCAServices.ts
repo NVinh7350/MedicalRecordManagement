@@ -20,10 +20,10 @@ import { buildCCPOrg1, buildCCPOrg2 } from '../Utils/fabricCaUtils';
  */
 export const buildCAClient =async (organization:string) => {
     try {
-        const caHostName = organization !== 'ORG1' ? 'ca.org1.example.com': 'ca.org2.example.com';
-        const mspOrg = organization !== 'ORG1' ? 'Org1MSP' : 'Org2MSP';
-        const ccp =  organization !== 'ORG1' ? buildCCPOrg1() : buildCCPOrg2();
-        const affiliation = organization !== 'ORG1' ? 'org1.department1' : 'org2.department1';
+        const caHostName = organization === 'ORG1' ? 'ca.org1.example.com': 'ca.org2.example.com';
+        const mspOrg = organization === 'ORG1' ? 'Org1MSP' : 'Org2MSP';
+        const ccp =  organization === 'ORG1' ? buildCCPOrg1() : buildCCPOrg2();
+        const affiliation = organization === 'ORG1' ? 'org1.department1' : 'org2.department1';
 
         const caInfo = ccp.certificateAuthorities[caHostName]; // lookup CA details from config
         const caTLSCACerts = caInfo.tlsCACerts.pem;

@@ -3,14 +3,14 @@ CREATE TABLE `User` (
     `citizenId` VARCHAR(191) NOT NULL,
     `fullName` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
-    `x509Identity` JSON NOT NULL,
+    `x509Identity` VARCHAR(191) NULL,
     `email` VARCHAR(191) NULL,
     `birthDay` DATETIME(3) NOT NULL,
     `gender` ENUM('MALE', 'FEMALE') NOT NULL,
     `role` ENUM('DOCTOR', 'PATIENT', 'ADMIN') NOT NULL,
     `ethnicity` VARCHAR(191) NULL,
     `address` VARCHAR(191) NULL,
-    `phoneNumber` VARCHAR(191) NOT NULL,
+    `phoneNumber` VARCHAR(191) NULL,
 
     PRIMARY KEY (`citizenId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -43,9 +43,11 @@ CREATE TABLE `MedicalRecord` (
     `doctorId` VARCHAR(191) NOT NULL,
     `patientId` VARCHAR(191) NOT NULL,
     `typeMR` ENUM('INPATIENT', 'OUTPATIENT') NOT NULL,
+    `specialty` VARCHAR(191) NULL,
+    `bed` VARCHAR(191) NULL,
     `comeTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `leaveTime` DATETIME(3) NOT NULL,
-    `ReExaminationTime` DATETIME(3) NOT NULL,
+    `leaveTime` DATETIME(3) NULL,
+    `ReExaminationTime` DATETIME(3) NULL,
     `personalMH` VARCHAR(191) NOT NULL,
     `familyMH` VARCHAR(191) NOT NULL,
     `majorReason` VARCHAR(191) NOT NULL,
@@ -67,22 +69,6 @@ CREATE TABLE `MedicalRecord` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Inpatient` (
-    `MRId` VARCHAR(191) NOT NULL,
-    `specialty` VARCHAR(191) NOT NULL,
-    `bed` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`MRId`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Outpatient` (
-    `MRId` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`MRId`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `Treatment` (
     `treatmentId` VARCHAR(191) NOT NULL,
     `diseaseProgression` VARCHAR(191) NOT NULL,
@@ -95,7 +81,6 @@ CREATE TABLE `Treatment` (
 -- CreateTable
 CREATE TABLE `Medicine` (
     `treatmentId` VARCHAR(191) NOT NULL,
-    `MRId` VARCHAR(191) NOT NULL,
     `medicineId` VARCHAR(191) NOT NULL,
     `medicineName` VARCHAR(191) NOT NULL,
     `drugDosage` VARCHAR(191) NOT NULL,
@@ -149,19 +134,10 @@ ALTER TABLE `MedicalRecord` ADD CONSTRAINT `MedicalRecord_doctorId_fkey` FOREIGN
 ALTER TABLE `MedicalRecord` ADD CONSTRAINT `MedicalRecord_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `Patient`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Inpatient` ADD CONSTRAINT `Inpatient_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `MedicalRecord`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Outpatient` ADD CONSTRAINT `Outpatient_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `MedicalRecord`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Treatment` ADD CONSTRAINT `Treatment_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `Inpatient`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Treatment` ADD CONSTRAINT `Treatment_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `MedicalRecord`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Medicine` ADD CONSTRAINT `Medicine_treatmentId_fkey` FOREIGN KEY (`treatmentId`) REFERENCES `Treatment`(`treatmentId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Medicine` ADD CONSTRAINT `Medicine_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `Outpatient`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Test` ADD CONSTRAINT `Test_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `MedicalRecord`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;
