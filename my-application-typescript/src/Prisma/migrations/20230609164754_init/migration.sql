@@ -37,6 +37,26 @@ CREATE TABLE `Doctor` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `access` (
+    `doctorId` VARCHAR(191) NOT NULL,
+    `patientId` VARCHAR(191) NOT NULL,
+    `requestTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`doctorId`, `patientId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `accessRequest` (
+    `doctorId` VARCHAR(191) NOT NULL,
+    `patientId` VARCHAR(191) NOT NULL,
+    `requestTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updateTime` DATETIME(3) NOT NULL,
+    `status` ENUM('AGREE', 'REFUSE', 'PENDING') NOT NULL,
+
+    PRIMARY KEY (`doctorId`, `patientId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `MedicalRecord` (
     `MRId` VARCHAR(191) NOT NULL,
     `status` ENUM('COMPLETED', 'CREATING') NOT NULL,
@@ -46,8 +66,6 @@ CREATE TABLE `MedicalRecord` (
     `specialty` VARCHAR(191) NULL,
     `bed` VARCHAR(191) NULL,
     `comeTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `leaveTime` DATETIME(3) NULL,
-    `ReExaminationTime` DATETIME(3) NULL,
     `personalMH` VARCHAR(191) NOT NULL,
     `familyMH` VARCHAR(191) NOT NULL,
     `majorReason` VARCHAR(191) NOT NULL,
@@ -64,6 +82,8 @@ CREATE TABLE `MedicalRecord` (
     `diagnosis` VARCHAR(191) NOT NULL,
     `prognosis` VARCHAR(191) NOT NULL,
     `directionTreatment` VARCHAR(191) NOT NULL,
+    `patientCondition` VARCHAR(191) NULL,
+    `finishTime` DATETIME(3) NULL,
 
     PRIMARY KEY (`MRId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -71,8 +91,10 @@ CREATE TABLE `MedicalRecord` (
 -- CreateTable
 CREATE TABLE `Treatment` (
     `treatmentId` VARCHAR(191) NOT NULL,
-    `diseaseProgression` VARCHAR(191) NOT NULL,
-    `treatmentTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `diseaseProgression` VARCHAR(191) NULL,
+    `treatmentTime` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `treatmentOutStart` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `treatmentOutEnd` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `MRId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`treatmentId`)
@@ -110,22 +132,23 @@ CREATE TABLE `Image` (
     PRIMARY KEY (`testId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `AccessRequest` (
-    `doctorId` VARCHAR(191) NOT NULL,
-    `MRId` VARCHAR(191) NOT NULL,
-    `requestTime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updateTime` DATETIME(3) NOT NULL,
-    `status` ENUM('AGREE', 'REFUSE') NOT NULL,
-
-    PRIMARY KEY (`doctorId`, `MRId`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
 -- AddForeignKey
 ALTER TABLE `Patient` ADD CONSTRAINT `Patient_citizenId_fkey` FOREIGN KEY (`citizenId`) REFERENCES `User`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Doctor` ADD CONSTRAINT `Doctor_citizenId_fkey` FOREIGN KEY (`citizenId`) REFERENCES `User`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `access` ADD CONSTRAINT `access_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `Doctor`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `access` ADD CONSTRAINT `access_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `Patient`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `accessRequest` ADD CONSTRAINT `accessRequest_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `Doctor`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `accessRequest` ADD CONSTRAINT `accessRequest_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `Patient`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `MedicalRecord` ADD CONSTRAINT `MedicalRecord_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `Doctor`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -144,9 +167,3 @@ ALTER TABLE `Test` ADD CONSTRAINT `Test_MRId_fkey` FOREIGN KEY (`MRId`) REFERENC
 
 -- AddForeignKey
 ALTER TABLE `Image` ADD CONSTRAINT `Image_testId_fkey` FOREIGN KEY (`testId`) REFERENCES `Test`(`testId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `AccessRequest` ADD CONSTRAINT `AccessRequest_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `Doctor`(`citizenId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `AccessRequest` ADD CONSTRAINT `AccessRequest_MRId_fkey` FOREIGN KEY (`MRId`) REFERENCES `MedicalRecord`(`MRId`) ON DELETE RESTRICT ON UPDATE CASCADE;

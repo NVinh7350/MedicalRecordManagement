@@ -111,8 +111,8 @@ const login = async(req: Request, res: Response) => {
 const getDoctorById = async(req: Request, res: Response) => {
     try {
         const doctorId = req.body.doctorId;
-        const resutl = await userServices.getDoctorByIdService(doctorId);
-        res.send(resutl);
+        const result = await userServices.getDoctorByIdService(doctorId);
+        res.send(result);
     } catch (error) {
         res.send(error);
     }
@@ -121,8 +121,8 @@ const getDoctorById = async(req: Request, res: Response) => {
 const getDoctorList = async(req: Request, res: Response) => {
     try {
         const page = Number(req.params.page);
-        const resutl = await userServices.getDoctorListService(page);
-        res.send(resutl);
+        const result = await userServices.getDoctorListService(page);
+        res.send(result);
     } catch (error) {
         res.status(500).json(error);
     }
@@ -131,8 +131,8 @@ const getDoctorList = async(req: Request, res: Response) => {
 const getPatientList = async(req: Request, res: Response) => {
     try {
         const page = Number(req.params.page);
-        const resutl = await userServices.getPatientListService(page);
-        res.send(resutl);
+        const result = await userServices.getPatientListService(page);
+        res.send(result);
     } catch (error) {
         res.send(error);
     }
@@ -141,8 +141,9 @@ const getPatientList = async(req: Request, res: Response) => {
 const getPatientById = async(req: Request, res: Response) => {
     try {
         const patientId = req.body.patientId;
-        const resutl = await userServices.getPatientByIdService(patientId);
-        res.send(resutl);
+        const doctorId = req.body.doctorId;
+        const result = await userServices.getPatientByIdService(patientId, doctorId);
+        res.send(result);
     } catch (error) {
         res.send(error);
     }
@@ -168,13 +169,106 @@ const updateDoctorInfo = async (req: Request, res: Response) => {
     try {
         const userInfo = {
             ...req.body.user,
-            birthDay : new Date(req.body.user.birthDay)
+            // birthDay : new Date(req.body.user.birthDay)
         };
         const doctorInfo = req.body.doctor;
         await userServices.updateDoctorInfoService(userInfo, doctorInfo);
         res.send(`success update doctor ${req.body.citizenId}`);
     } catch (error) {
         res.send(error);
+    }
+}
+
+const requestAccess = async (req: Request, res: Response) => {
+    try {
+        const patientId = req.body.patientId;
+        const doctorId = req.body.doctorId;
+        await userServices.requestAccessService(doctorId, patientId);
+        res.send(`success request access ${patientId}`);
+    } catch (error) {
+        if(error instanceof Error) {
+            res.status(500).send(error.message);
+        }
+    }
+}
+
+const getRequestDoctorList = async (req: Request, res: Response) => {
+    try {
+        const patientId = req.body.patientId;
+        const page = Number(req.params.page);
+        const result = await userServices.getRequestDoctorListService(patientId, page);
+        res.status(200).send(result);
+    } catch (error) {
+        res.send(error);
+    }
+}
+
+const getRequestedList = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.body.doctorId;
+        const page = Number(req.params.page);
+        const result = await userServices.getRequestedListService(doctorId, page);
+        res.status(200).send(result);
+    } catch (error) {
+        res.send(error);
+    }
+}
+
+const acceptRequest = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.body.doctorId;
+        const patientId = req.body.patientId;
+        await userServices.acceptRequestService(doctorId, patientId);
+        res.status(200).send(`success accept request of ${doctorId}`);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}
+
+const getAccessibleDoctorList = async (req: Request, res: Response) => {
+    try {
+        const patientId = req.body.patientId;
+        const page = Number(req.params.page);
+        const result = await userServices.getAccessibleDoctorListService(patientId, page);
+        res.status(200).send(result);
+    } catch (error) {
+        res.send(error);
+    }
+}
+
+const getAuthorizedAccessList = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.body.doctorId;
+        const page = Number(req.params.page);
+        const result = await userServices.getAuthorizedAccessListService(doctorId, page);
+        res.status(200).send(result);
+    } catch (error) {
+        res.send(error);
+    }
+}
+
+const refuseRequest = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.body.doctorId;
+        const patientId = req.body.patientId;
+        const result = await userServices.refuseRequestService(doctorId, patientId);
+        res.status(200).send(`success refuse doctor ${doctorId}`);
+        res.status(200).send(result);
+    } catch (error) {
+        res.send(error);
+    }
+}
+
+const revokeRequest = async (req: Request, res: Response) => {
+    try {
+        const doctorId = req.body.doctorId;
+        const patientId = req.body.patientId;
+        await userServices.revokeAccessService(doctorId, patientId);
+        res.status(200).send(`success revoke doctor ${doctorId}`);
+    } catch (error) {
+        if(error instanceof Error) {
+            res.status(500).send(error.message);
+        }
     }
 }
 
@@ -189,5 +283,13 @@ export const userController = {
     getDoctorList,
     getPatientList,
     getPatientById,
-    getDoctorById
+    getDoctorById,
+    requestAccess,
+    getRequestDoctorList,
+    getRequestedList,
+    acceptRequest,
+    getAccessibleDoctorList,
+    getAuthorizedAccessList,
+    refuseRequest,
+    revokeRequest
 }

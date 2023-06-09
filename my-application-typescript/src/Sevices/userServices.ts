@@ -1,4 +1,5 @@
 import { PrismaClient, User, Patient, Doctor } from '@prisma/client'
+import { error } from 'console';
 
 const prisma = new PrismaClient()
 
@@ -13,7 +14,6 @@ const createUserService = async (user: User) => {
         }
     }
 }
-
 
 const getX509IdentityService = async (citizenIds:string) => {
     try {
@@ -88,16 +88,9 @@ const getPatientListService =async (page: number) => {
         const result = await prisma.patient.findMany({
             select : {
                 citizenId: true,
-                guardianAddress: true,
-                guardianName: true,
-                guardianPhone: true,
-                HICNumber: true,
                 user : {
                     select : {
                         fullName: true,
-                        phoneNumber: true,
-                        email: true,
-                        address: true,
                         birthDay: true,
                         gender: true,
                         ethnicity: true,
@@ -114,33 +107,156 @@ const getPatientListService =async (page: number) => {
     }
 } 
 
-const getPatientByIdService =async (patientId : string) => {
-    try {
-        const result = await prisma.patient.findUnique({
-            select : {
-                citizenId: true,
-                guardianAddress: true,
-                guardianName: true,
-                guardianPhone: true,
-                HICNumber: true,
-                user : {
-                    select : {
-                        fullName: true,
-                        phoneNumber: true,
-                        email: true,
-                        address: true,
-                        birthDay: true,
-                        gender: true,
-                        ethnicity: true,
-                        role: true
+const getRequestedListService = async (doctorId : string ,page: number) => {
+    try{
+        const result = await prisma.doctor.findMany({
+            select: {
+                accessRequestList: {
+                    select: {
+                        patient: {  
+                            select: {
+                                citizenId: true,
+                                user: {
+                                    select: {
+                                        fullName: true,
+                                        birthDay: true,
+                                        address: true,
+                                        gender: true
+                                    }
+                                }
+                            }
+                        },
+                        requestTime: true,
+                        status: true,
+                        updateTime: true
                     }
                 }
-            }, 
-            where : {
-                citizenId: patientId
+            },
+            where: {
+                citizenId: doctorId
+            },
+            skip : (page - 1) * 10,
+            take : 10
+        })
+        return result;
+    } catch (error) {
+        throw error
+    }
+}
+
+const getAuthorizedAccessListService = async (doctorId : string ,page: number) => {
+    try{
+        const result = await prisma.doctor.findMany({
+            select: {
+                accessList: {
+                    select: {
+                        patient: {
+                            select: {
+                                citizenId: true,
+                                user: {
+                                    select: {
+                                        fullName: true,
+                                        address: true,
+                                        birthDay: true,
+                                        email: true,
+                                    }
+                                }
+                            }
+                        },
+                        requestTime: true,
+                    }
+                }
+            },
+            where: {
+                citizenId: doctorId
+            },
+            skip : (page - 1) * 10,
+            take : 10 
+        })
+        return result;
+    } catch (error) {
+        throw error
+    }
+}
+
+const getPatientByIdService =async (patientId : string, doctorId: string) => {
+    try {
+        let access = await prisma.patient.findMany({
+            where: {
+                accessList : {
+                    some : {
+                        doctorId : doctorId
+                    }
+                }
             }
         })
-        return result
+        if(access.length > 0) {
+            return await prisma.patient.findMany({
+                select : {
+                    citizenId: true,
+                    guardianAddress: true,
+                    guardianName: true,
+                    guardianPhone: true,
+                    HICNumber: true,
+                    user : {
+                        select : {
+                            fullName: true,
+                            phoneNumber: true,
+                            email: true,
+                            address: true,
+                            birthDay: true,
+                            gender: true,
+                            ethnicity: true,
+                        }
+                    },
+                    MROwned: {
+                        select: {
+                            MRId: true,
+                            comeTime: true,
+                            status: true,
+                            finishTime: true,
+                            creator: {
+                                select : {
+                                    user: {
+                                        select: {
+                                            fullName:true
+                                        }
+                                    },
+                                    position: true,
+                                    specialty: true,
+                                    hospital: true                        
+                                }    
+                            }
+                        }
+                    }
+                }, 
+                where : {
+                    citizenId: patientId,
+                    accessList: {
+                        some: {
+                            doctorId : doctorId
+                        }
+                    }
+                }
+            })
+        } else {
+            return await prisma.patient.findUnique({
+                select: {
+                    citizenId: true,
+                    user: {
+                        select: {
+                            fullName : true,
+                            birthDay : true,
+                            address : true,
+                            gender : true
+                        }
+                    }
+                },
+                where: {
+                    citizenId : patientId
+                }
+            })
+        }
     } catch (error) {
         throw error;
     }
@@ -166,6 +282,7 @@ const updatePatientInfoService = async (user: User, patient: Patient) => {
                 }
             })
         ])
+        
     } catch (error) {
         console.log(error)
         throw error;
@@ -223,6 +340,88 @@ const getDoctorListService =async (page: number) => {
     }
 } 
 
+const getRequestDoctorListService = async (patientId : string ,page: number) => {
+    try{
+        const result = await prisma.patient.findMany({
+            select: {
+                accessRequestList: {
+                    select: {
+                        doctor: {
+                            select: {
+                                citizenId: true,
+                                hospital: true,
+                                position: true,
+                                specialty: true,
+                                user: {
+                                    select: {
+                                        fullName: true,
+                                        birthDay: true,
+                                        address: true,
+                                        email: true,
+                                        gender: true,
+                                        phoneNumber: true
+                                    }
+                                }
+                            }
+                        },
+                        requestTime: true,
+                        status: true,
+                        updateTime: true
+                    }
+                }
+            },
+            where: {
+                citizenId: patientId
+            },
+            skip : (page - 1) * 10,
+            take : 10
+        })
+        return result;
+    } catch (error) {
+        throw error
+    }
+}
+
+const getAccessibleDoctorListService = async (patientId : string ,page: number) => {
+    try{
+        const result = await prisma.patient.findMany({
+            select: {
+                accessList: {
+                    select: {
+                        doctor: {
+                            select: {
+                                citizenId: true,
+                                hospital: true,
+                                position: true,
+                                specialty: true,
+                                user: {
+                                    select: {
+                                        fullName: true,
+                                        birthDay: true,
+                                        address: true,
+                                        email: true,
+                                        gender: true,
+                                        phoneNumber: true
+                                    }
+                                }
+                            }
+                        },
+                        requestTime: true
+                    }
+                }
+            },
+            where: {
+                citizenId: patientId
+            },
+            skip : (page - 1) * 10,
+            take : 10
+        })
+        return result;
+    } catch (error) {
+        throw error
+    }
+}
+
 const getDoctorByIdService =async (doctorId: string) => {
     try {
         const result = await prisma.doctor.findUnique({
@@ -279,6 +478,105 @@ const updateDoctorInfoService = async (user: User, doctor: Doctor) => {
     }
 }
 
+const requestAccessService = async (doctorId: string, patientId: string) => {
+    try {
+        const check = await checkAccess(doctorId, patientId)
+        if(!check) {
+            await prisma.accessRequest.create({
+                data: {
+                    status: 'PENDING',
+                    doctorId: doctorId,
+                    patientId: patientId
+                }
+            })
+        } else {
+            throw new Error(`Ban da co quyen truy cap voi benh nhan ${patientId}`)
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+const refuseRequestService = async (doctorId: string, patientId: string) => {
+    try {
+        await prisma.accessRequest.delete({
+            where: {
+                doctorId_patientId: {
+                    doctorId: doctorId,
+                    patientId: patientId
+                }
+            }
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+
+const acceptRequestService = async (doctorId: string, patientId: string) => {
+    try {
+        await prisma.access.create({
+            data: {
+                doctorId: doctorId,
+                patientId: patientId
+            }
+        })
+        await prisma.accessRequest.delete({
+            where: {
+                doctorId_patientId: {
+                    doctorId: doctorId,
+                    patientId: patientId
+                }
+            }
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+
+const revokeAccessService = async (doctorId: string, patientId: string) => {
+    try {
+        const checkCreator = await prisma.medicalRecord.findMany({
+            where: {
+                AND: {
+                    doctorId : doctorId,
+                    patientId: patientId,
+                    status: 'CREATING'
+                }
+            }
+        })
+        if(checkCreator.length >0) {
+            throw new Error('Bac si dang tao benh an khong the thu hoi quyen truy cap')
+        } else {
+            await prisma.access.delete({
+                where: {
+                    doctorId_patientId: {
+                        doctorId: doctorId,
+                        patientId: patientId
+                    }
+                }
+            })
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+const checkAccess =async (doctorId: string, patientId: string) => {
+    try {
+        const check = await prisma.access.findUnique({
+            where: {
+                doctorId_patientId : {
+                    doctorId: doctorId,
+                    patientId: patientId
+                }
+            }
+        })
+        return check;
+    } catch (error) {
+        throw error
+    }
+}
+
 export const userServices = {
     createDoctorService,
     createPatientService,
@@ -292,6 +590,13 @@ export const userServices = {
     insertX509IdentityService,
     updateDoctorInfoService,
     updatePatientInfoService,
-
-
+    getAccessibleDoctorListService,
+    acceptRequestService,
+    revokeAccessService,
+    refuseRequestService,
+    requestAccessService,
+    getRequestDoctorListService,
+    getAuthorizedAccessListService,
+    getRequestedListService,
+    checkAccess
 }

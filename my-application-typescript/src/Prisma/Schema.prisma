@@ -32,6 +32,8 @@ model Patient {
 
     user     User     @relation("USER_PATIENT",fields: [citizenId], references: [citizenId]) // thông tin cá nhân
 	MROwned MedicalRecord[] @relation("OWNER_MR") // Danh sách bệnh án 
+	accessRequestList accessRequest[] @relation("PATIENT_REQUESTLIST")
+	accessList access[] @relation("PATIENT_ACCESSLIST")
 	@@id([citizenId])
 }
 
@@ -42,8 +44,30 @@ model Doctor {
     hospital  String // Bệnh viện
     user     User     @relation("USER_DOCTOR",fields: [citizenId], references: [citizenId]) // thông tin cá nhân
 	MRCreated MedicalRecord[] @relation("CREATOR_MR") // danh sách bệnh án đã tạo
-	AccessRequests AccessRequest[] @relation("MR_ACCESS_REQUEST") // danh sách bệnh án đang yêu cầu truy cập
+	accessRequestList accessRequest[] @relation("DOCTOR_REQUESTLIST")
+	accessList access[] @relation("DOCTOR_ACCESSLIST")
 	@@id([citizenId])
+}
+
+model access {
+	doctor Doctor @relation("DOCTOR_ACCESSLIST", fields: [doctorId], references: [citizenId]) // bác sĩ yêu cầu
+	doctorId String 
+	patient Patient @relation("PATIENT_ACCESSLIST", fields: [patientId], references: [citizenId]) // bệnh án được yêu cầu
+	patientId String 
+	requestTime DateTime @default(now()) // thời gian yêu cầu
+	@@id([doctorId, patientId])
+}
+
+
+model accessRequest {
+	doctor Doctor @relation("DOCTOR_REQUESTLIST", fields: [doctorId], references: [citizenId]) // bác sĩ yêu cầu
+	doctorId String 
+	patient Patient @relation("PATIENT_REQUESTLIST", fields: [patientId], references: [citizenId]) // bệnh án được yêu cầu
+	patientId String  
+	requestTime DateTime @default(now()) // thời gian yêu cầu
+	updateTime DateTime @updatedAt() // thời gian trả lời yêu cầu
+	status ARStatus // trạng thái trả lời
+	@@id([doctorId, patientId])
 }
 
 model MedicalRecord {
@@ -54,16 +78,14 @@ model MedicalRecord {
 	doctorId String // cccd bác sĩ
 	owner Patient @relation("OWNER_MR", fields: [patientId], references: [citizenId]) // bệnh nhân
 	patientId String // cccd bệnh nhân
-	AccessRequests AccessRequest[] @relation("ACCESS_REQUEST_DOCTOR") // danh sách bác sĩ đang yêu cầu truy cập
-
+	// AccessRequests AccessRequest[] @relation("ACCESS_REQUEST_DOCTOR") // danh sách bác sĩ đang yêu cầu truy cập
+	// AccessList AccessList[] @relation("MR_ACCESS_LIST")
 	typeMR TypeMR  // Loại điều trị 
 	// inpatient Inpatient? @relation("INPATIENT_MR") // điều trị nội trú
 	// outpatient Outpatient? @relation("OUTPATIENT_MR") // điều trị ngoại trú
 	specialty String? // khoa điều trị
 	bed String?  // giường bệnh
 	comeTime DateTime @default(now()) // thời gian vào viện 
-	leaveTime DateTime? // thời gian xuất viện
-	ReExaminationTime DateTime?  // thời gian tái khám
 
 	personalMH String //	personal medical history: Tiền sử bệnh bản thân
 	familyMH String  //  family medical history: Tiền sử bệnh gia đình
@@ -80,11 +102,15 @@ model MedicalRecord {
 	weight Float // cân nặng
 
 	tests Test[] @relation("RM_TEST") // danh sách các xét nghiệm
-	summaryMR String  // tóm tắt bệnh án
-	diagnosis String // chuẩn đoán bệnh
+	summaryMR String  // tóm tắt kết quả cận lâm sàng
+	diagnosis String // chuẩn đoán bệnh ban đầu
 	prognosis String // tiên lượng
-	directionTreatment String  // hướng điều trị
+	directionTreatment String  // hướng điều trị ban đầu
 	treatments Treatment[] @relation("TREATMENT_MR")
+
+	patientCondition String? // tình trạng bệnh nhân sau khi kết thúc bệnh án 
+	finishTime DateTime?
+
 }
 
 // model Inpatient {
@@ -99,10 +125,13 @@ model MedicalRecord {
 // 	medicine Medicine[] @relation("OUTPATIENT_MEDICINE") // danh sách thuốc
 // }
 
+
 model Treatment {
 	treatmentId String @id @default(uuid()) // id điều trị
-	diseaseProgression String  // diễn biến bệnh
-	treatmentTime DateTime @default(now()) // thời gian điều trị
+	diseaseProgression String?  // diễn biến bệnh
+	treatmentTime DateTime? @default(now()) // thời gian điều trị
+	treatmentOutStart DateTime? @default(now())
+	treatmentOutEnd DateTime? @default(now())
 	medicine Medicine[] @relation("TREATMENT_MEDICINE") // danh sachs thuốc
 	// inpatient Inpatient @relation("TREATMENT_INPATIENT", fields: [MRId], references: [MRId]) // nội trú
 	medicalRecord MedicalRecord @relation("TREATMENT_MR", fields: [MRId], references: [MRId]) // bệnh án
@@ -141,17 +170,6 @@ model Image {
 
 
 
-model AccessRequest {
-	doctor Doctor @relation("MR_ACCESS_REQUEST", fields: [doctorId], references: [citizenId]) // bác sĩ yêu cầu
-	doctorId String 
-	medicalRecord MedicalRecord @relation("ACCESS_REQUEST_DOCTOR", fields: [MRId], references: [MRId]) // bệnh án được yêu cầu
-	MRId String 
-	requestTime DateTime @default(now()) // thời gian yêu cầu
-	updateTime DateTime @updatedAt() // thời gian trả lời yêu cầu
-	status ARStatus // trạng thái trả lời
-	@@id([doctorId, MRId])
-}
-
 enum TypeMR {
 	INPATIENT
 	OUTPATIENT
@@ -160,6 +178,7 @@ enum TypeMR {
 enum ARStatus {
 	AGREE
 	REFUSE
+	PENDING
 }
 
 enum MRStatus {

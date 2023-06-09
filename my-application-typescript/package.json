@@ -30,7 +30,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/crypto-js": "^4.1.1"
+    "@types/crypto-js": "^4.1.1",
+    "@types/uuid": "^9.0.1"
   },
   "prisma": {
     "schema": "src/Prisma/Schema.prisma"
