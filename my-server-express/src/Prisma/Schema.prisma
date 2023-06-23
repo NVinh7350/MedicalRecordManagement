@@ -1,0 +1,207 @@
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    citizenId       String   @id // Số CCCD + role : ADMIN-200145541122
+	citizenNumber  String //Số CCCD
+    fullName     String // Họ và tên
+    password     String // Hash data pw
+    x509Identity String? // Định danh x509 cho fabric ca
+    email        String? // email 
+    birthDay     DateTime // ngày sinh
+    gender       Gender // Giới tính
+    role         Role // Quyền truy cập
+    ethnicity    String? // Dân tộc
+    address      String? // Địa chỉ
+    phoneNumber  String? // Số điện thoại
+	refreshToken String?
+	organization String?
+	patient Patient? @relation("USER_PATIENT") // Là bệnh nhân
+	doctor Doctor? @relation("USER_DOCTOR") // Là bác sĩ
+	createDate DateTime @default(now())
+}
+
+model Patient {
+	citizenId String // Số CCCD
+    HICNumber    String? // Số bảo hiểm y tế
+    guardianName String? // Tên người thân
+    guardianPhone String? // SDT người thân
+    guardianAddress String?  // Địa chỉ người thân
+
+    user     User     @relation("USER_PATIENT",fields: [citizenId], references: [citizenId]) // thông tin cá nhân
+	MROwned MedicalRecord[] @relation("OWNER_MR") // Danh sách bệnh án 
+	accessRequestList accessRequest[] @relation("PATIENT_REQUESTLIST")
+	accessList access[] @relation("PATIENT_ACCESSLIST")
+	@@id([citizenId])
+}
+
+model Doctor {
+    citizenId String  // CCCD
+    position  String // Chức vụ
+    specialty String // Khoa
+    hospital  String // Bệnh viện
+    user     User     @relation("USER_DOCTOR",fields: [citizenId], references: [citizenId]) // thông tin cá nhân
+	MRCreated MedicalRecord[] @relation("CREATOR_MR") // danh sách bệnh án đã tạo
+	accessRequestList accessRequest[] @relation("DOCTOR_REQUESTLIST")
+	accessList access[] @relation("DOCTOR_ACCESSLIST")
+	@@id([citizenId])
+}
+
+model access {
+	doctor Doctor @relation("DOCTOR_ACCESSLIST", fields: [doctorId], references: [citizenId]) // bác sĩ yêu cầu
+	doctorId String 
+	patient Patient @relation("PATIENT_ACCESSLIST", fields: [patientId], references: [citizenId]) // bệnh án được yêu cầu
+	patientId String 
+	requestTime DateTime  // thời gian yêu cầu
+	@@id([doctorId, patientId])
+}
+
+
+model accessRequest {
+	doctor Doctor @relation("DOCTOR_REQUESTLIST", fields: [doctorId], references: [citizenId]) // bác sĩ yêu cầu
+	doctorId String 
+	patient Patient @relation("PATIENT_REQUESTLIST", fields: [patientId], references: [citizenId]) // bệnh án được yêu cầu
+	patientId String  
+	requestTime DateTime  // thời gian yêu cầu
+	status ARStatus // trạng thái trả lời
+	@@id([doctorId, patientId])
+}
+
+model MedicalRecord {
+	MRId String @id @default(uuid()) // CCCD
+	status MRStatus // Trạng thái của bệnh án
+
+	creator Doctor @relation("CREATOR_MR", fields: [doctorId], references: [citizenId]) // bác sĩ tạo bệnh án
+	doctorId String // cccd bác sĩ
+	owner Patient @relation("OWNER_MR", fields: [patientId], references: [citizenId]) // bệnh nhân
+	patientId String // cccd bệnh nhân
+	// AccessRequests AccessRequest[] @relation("ACCESS_REQUEST_DOCTOR") // danh sách bác sĩ đang yêu cầu truy cập
+	// AccessList AccessList[] @relation("MR_ACCESS_LIST")
+	typeMR TypeMR  // Loại điều trị 
+	// inpatient Inpatient? @relation("INPATIENT_MR") // điều trị nội trú
+	// outpatient Outpatient? @relation("OUTPATIENT_MR") // điều trị ngoại trú
+	specialty String? // khoa điều trị
+	bed String?  // giường bệnh
+	comeTime DateTime // thời gian vào viện 
+
+	personalMH String //	personal medical history: Tiền sử bệnh bản thân
+	familyMH String  //  family medical history: Tiền sử bệnh gia đình
+	majorReason String //  Lý do chính vào viện
+    pathogenesis String //  Qúa trình bệnh lý
+
+	body String 	// toàn thân
+	organs String 	// cơ quan nội tạng 
+	pulse Int		// Mạch đập 
+	temperature Float // Nhiệt độ
+	maxBP Int 	//Maximum blood pressure: Huyết áp tối đa
+	minBP Int 	//Minimum blood pressure: Huyết áp tối thiểu
+	breathing Int // Nhịp thở
+	weight Float // cân nặng
+
+	tests Test[] @relation("RM_TEST") // danh sách các xét nghiệm
+	summaryMR String  // tóm tắt kết quả cận lâm sàng
+	diagnosis String // chuẩn đoán bệnh ban đầu
+	prognosis String // tiên lượng
+	directionTreatment String  // hướng điều trị ban đầu
+	treatments Treatment[] @relation("TREATMENT_MR")
+
+	patientCondition String? // tình trạng bệnh nhân sau khi kết thúc bệnh án 
+	finishTime DateTime?
+
+}
+
+// model Inpatient {
+// 	medicalRecord MedicalRecord @relation("INPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
+// 	MRId String @id  
+// 	treatments Treatment[] @relation("TREATMENT_INPATIENT") // danh sách các điều trị
+// } 
+
+// model Outpatient {
+// 	medicalRecord MedicalRecord @relation("OUTPATIENT_MR", fields: [MRId], references: [MRId]) // bệnh án
+// 	MRId String @id  
+// 	medicine Medicine[] @relation("OUTPATIENT_MEDICINE") // danh sách thuốc
+// }
+
+
+model Treatment {
+	treatmentId Int @id @default(autoincrement()) // id điều trị
+	diseaseProgression String?  // diễn biến bệnh
+	treatmentTime DateTime? // thời gian điều trị
+	treatmentOutStart DateTime?
+	treatmentOutEnd DateTime?
+	medicines Medicine[] @relation("TREATMENT_MEDICINE") // danh sachs thuốc
+	// inpatient Inpatient @relation("TREATMENT_INPATIENT", fields: [MRId], references: [MRId]) // nội trú
+	medicalRecord MedicalRecord @relation("TREATMENT_MR", fields: [MRId], references: [MRId]) // bệnh án
+	MRId String 
+}
+
+model Medicine {
+	treatment Treatment @relation("TREATMENT_MEDICINE", fields: [treatmentId], references: [treatmentId]) // thuộc về danh sách điều trị nội trú
+	treatmentId Int
+	// outpatient Outpatient? @relation("OUTPATIENT_MEDICINE", fields: [MRId], references: [MRId]) // thuộc về ngoại trú
+	// MRId String? 
+	medicineId Int @id @default(autoincrement()) // id thuốc
+	medicineName String // tên thuốc
+	drugDosage String // liều dùng
+	drugFrequency Int // số lần dùng trong ngày
+	totalDay Int  // số ngày dùng
+	specify String  // chỉ định thêm
+}
+
+
+model Test {
+ 	testId Int @id @default(autoincrement()) // id xét nghiệm
+	createTime DateTime // ngày tạo xét nghiệm
+	typeTest String  // loại xét nghiệm
+	resultTest String // kết quả xét nghiệm
+	images Image[] @relation("IMAGE_TEST") // danh sách hình ảnh
+	medicalRecord MedicalRecord @relation("RM_TEST", fields: [MRId], references: [MRId]) // thuộc về bệnh án
+	MRId String
+}
+
+model Image {
+	test Test @relation("IMAGE_TEST",fields: [testId], references: [testId])
+	testId Int
+	imageId Int @id @default(autoincrement())
+	value String
+}
+
+
+
+enum TypeMR {
+	INPATIENT
+	OUTPATIENT
+}
+
+enum ARStatus {
+	AGREE
+	REFUSE
+	PENDING
+}
+
+enum MRStatus {
+	COMPLETED
+	CREATING
+}
+
+enum Role {
+    DOCTOR
+    PATIENT
+    ADMIN
+}
+
+enum Gender {
+    MALE
+    FEMALE
+}
+
+enum Profession {
+    Patient
+    Doctor
+}

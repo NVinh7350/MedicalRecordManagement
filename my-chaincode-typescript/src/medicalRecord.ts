@@ -3,22 +3,17 @@
 */
 
 import {Object, Property} from 'fabric-contract-api';
-import { Timestamp } from 'fabric-shim';
-
 
 @Object()
 export class MedicalRecord {
     @Property()
-    public idMedicalRecord: string;
+    public medicalRecordId: string;
 
     @Property()
-    public owner: string;
+    public patientId: string;
 
     @Property()
     public doctorCreator: string;
-
-    @Property()
-    public viewDoctorList: string[];
 
     @Property()
     public medicalRecordHashData: string;
@@ -27,5 +22,6 @@ export class MedicalRecord {
     public medicalRecordStatus: string;
 
     @Property()
-    public medicalRecordTime: number;
+    public medicalRecordUpdateTime: number;
+
 }

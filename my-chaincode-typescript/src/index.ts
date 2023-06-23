@@ -8,8 +8,8 @@
 
 // export const contracts: any[] = [AssetTransferContract];
 
-import {MedicalRecordTransferContract} from './medicalRecordTransfer';
+import {PatientRecordTransferContract} from './transfer';
 
-export {MedicalRecordTransferContract} from './medicalRecordTransfer';
+export {PatientRecordTransferContract} from './transfer';
 
-export const contracts: any[] = [MedicalRecordTransferContract];
+export const contracts: any[] = [PatientRecordTransferContract];

@@ -1,0 +1,116 @@
+
+.text-field-container {
+    position: relative;
+    height: 52px;
+    padding: 10px;
+    margin: 15px 20px;
+  }
+  
+  .text-field-container input {
+    width: 87%;
+    height: 100%;
+    background: transparent;
+    font-size: 16px;
+    padding: 0 20px 0 20px;
+    border: 1px solid #1877f2;
+    border-width: 0 0 1px 0;
+    /* border-radius: 5px; */
+    outline: none;
+  }
+
+  .text-field-container label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    color: #8f8f8f;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 16px;
+    transition: all ease .40s;
+    margin-left: 10px;
+
+  }
+  
+  .text-field-container span {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    text-align: right;
+    /* margin: 5px 20px;
+    height: 15px;
+    width: 100%; */
+  }
+
+  .text-field-container .icon {
+    position: absolute;
+    right: 10px;
+    bottom: -15px;
+    font-size: 20px;
+    height: 100%;
+    color: #8f8f8f;
+  }
+  
+  .text-field-container input:focus~label{
+    top: 10px;
+    background-color: #fff;
+    color: #1877f2;
+    font-size: 13px;
+    padding: 0px 10px;
+  }
+
+  .valid label{
+    top: 10px;
+    background-color: #fff;
+    color: #1877f2;
+    font-size: 13px;
+    padding: 0px 10px;
+  }
+
+  .doctor-input-container button {
+    width: 85%;
+    height: 52px;
+    padding: 10px;
+    margin: 30px 0 10px 0;
+    background-color: #1877f2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 30px;
+  }
+  
+  .doctor-input-container button:hover {
+    background-color: #1b63c1;
+  }
+
+  .user-input-container button {
+    width: 40%;
+    height: 52px;
+    padding: 10px;
+    margin: 30px 0 10px 0;
+    background-color: #1877f2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    margin-left: 30px;
+  }
+
+  .user-input-container button:hover {
+    background-color: #1b63c1;
+  }
